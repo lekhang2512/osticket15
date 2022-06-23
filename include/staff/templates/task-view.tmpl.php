@@ -12,8 +12,6 @@ $thread = $task->getThread();
 
 $iscloseable = $task->isCloseable();
 $canClose = ($role->hasPerm(TaskModel::PERM_CLOSE) && $iscloseable === true);
-var_dump($canClose);
-// die;
 $actions = array();
 $object = $task->ticket;
 
