@@ -12,6 +12,8 @@ $thread = $task->getThread();
 
 $iscloseable = $task->isCloseable();
 $canClose = ($role->hasPerm(TaskModel::PERM_CLOSE) && $iscloseable === true);
+var_dump($canClose);
+// die;
 $actions = array();
 $object = $task->ticket;
 
@@ -220,7 +222,7 @@ if ($task->isOverdue())
                             <a class="no-pjax task-action"
                                 href="#tasks/<?php echo $task->getId(); ?>/reopen"><i
                                 class="icon-fixed-width icon-undo"></i> <?php
-                                echo __('Reopen');?> </a>
+                                echo __('Reopen 1');?> </a>
                         </li>
                         <?php
                         } elseif ($canClose) {

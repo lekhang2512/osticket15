@@ -201,7 +201,7 @@ class TaskModel extends VerySimpleModel {
     }
 
     function isClosed() {
-        return !$this->isOpen();
+        self::ISCLOSE === $this->get('flags');
     }
 
     function isProgress() {
