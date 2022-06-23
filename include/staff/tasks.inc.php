@@ -65,7 +65,6 @@ $queue_columns = array(
 // Queue we're viewing
 $queue_key = sprintf('::Q:%s', ObjectModel::OBJECT_TYPE_TASK);
 $queue_name = $_SESSION[$queue_key] ?: '';
-
 switch ($queue_name) {
 case 'closed':
     $status='closed';
@@ -85,6 +84,16 @@ case 'assigned':
     $staffId=$thisstaff->getId();
     $results_type=__('My Tasks');
     $tasks->filter(array('staff_id'=>$thisstaff->getId()));
+    $queue_sort_options = array('updated', 'created', 'hot', 'number');
+    break;
+case 'progress':
+    $status='progress';
+    $results_type=__('Progress Tasks');
+    $queue_sort_options = array('progress', 'created', 'hot', 'number');
+    break;
+case 'done':
+    $status='done';
+    $results_type=__('Done Tasks');
     $queue_sort_options = array('updated', 'created', 'hot', 'number');
     break;
 default:
@@ -111,11 +120,36 @@ case 'open':
 // Apply filters
 $filters = array();
 if ($status) {
-    $SQ = new Q(array('flags__hasbit' => TaskModel::ISOPEN));
-    if (!strcasecmp($status, 'closed'))
-        $SQ->negate();
+    switch ($status) {
+        case 'progress':
+            $filters[] = new Q(array(
+                'flags__exact' => Task::ISPROGRESS,
+            ));
+            break;
+        case 'done':
+            $filters[] = new Q(array(
+                'flags__exact' => Task::ISDONE,
+            ));
+            break;
+        case 'open':
+            $filters[] = new Q(array(
+                'flags__exact' => Task::ISOPEN,
+            ));
+            break;
+        case 'closed':
+            $filters[] = new Q(array(
+                'flags__exact' => 0,
+            ));
+            break;
 
-    $filters[] = $SQ;
+        default:
+            $SQ = new Q(array('flags__hasbit' => TaskModel::ISOPEN));
+            if (!strcasecmp($status, 'closed'))
+                $SQ->negate();
+
+            $filters[] = $SQ;
+            break;
+    }
 }
 
 if ($filters)

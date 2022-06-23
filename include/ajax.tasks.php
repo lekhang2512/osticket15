@@ -850,6 +850,36 @@ class TasksAjaxAPI extends AjaxController {
                 $info['warn'] = sprintf(__('Are you sure you want to change status of %s?'),
                         __('this task'));
             break;
+        case 'progress':
+            $perm = Task::PERM_PROGRESS;
+            $info = array(
+                    ':title' => sprintf(__('Progress Task #%s'),
+                        $task->getNumber()),
+                    ':action' => sprintf('#tasks/%d/progress',
+                        $task->getId())
+                    );
+
+            if (($m=$task->isProgressable()) !== true)
+                $errors['err'] = $info['error'] = $m;
+            else
+                $info['warn'] = sprintf(__('Are you sure you want to change status of %s?'),
+                        __('this task'));
+            break;
+        case 'done':
+            $perm = Task::PERM_DONE;
+            $info = array(
+                    ':title' => sprintf(__('Done Task #%s'),
+                        $task->getNumber()),
+                    ':action' => sprintf('#tasks/%d/done',
+                        $task->getId())
+                    );
+
+            if (($m=$task->isProgressable()) !== true)
+                $errors['err'] = $info['error'] = $m;
+            else
+                $info['warn'] = sprintf(__('Are you sure you want to change status of %s?'),
+                        __('this task'));
+            break;
         default:
             Http::response(404, __('Unknown status'));
         }
@@ -858,6 +888,10 @@ class TasksAjaxAPI extends AjaxController {
             $errors['err'] = sprintf(
                         __('You do not have permission to %s tasks'),
                         $statuses[$status]);
+
+        if ($status === 'progress' || $status === 'done') {
+            $errors = array();
+        }
 
         if ($_POST && !$errors) {
             if ($task->setStatus($status, $_POST['comments'], $errors))
@@ -877,6 +911,14 @@ class TasksAjaxAPI extends AjaxController {
 
    function close($tid) {
        return $this->changeStatus($tid, 'closed');
+   }
+
+   function progress($tid) {
+       return $this->changeStatus($tid, 'progress');
+   }
+
+   function done($tid) {
+       return $this->changeStatus($tid, 'done');
    }
 
     function task($tid) {

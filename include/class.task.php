@@ -73,6 +73,8 @@ class TaskModel extends VerySimpleModel {
     const PERM_REPLY    = 'task.reply';
     const PERM_CLOSE    = 'task.close';
     const PERM_DELETE   = 'task.delete';
+    const PERM_PROGRESS = 'task.progress';
+    const PERM_DONE     = 'task.done';
 
     static protected $perms = array(
             self::PERM_CREATE    => array(
@@ -110,10 +112,23 @@ class TaskModel extends VerySimpleModel {
                 /* @trans */ 'Delete',
                 'desc'  =>
                 /* @trans */ 'Ability to delete tasks'),
+            self::PERM_PROGRESS    => array(
+                'title' =>
+                /* @trans */ 'Progress',
+                'desc'  =>
+                /* @trans */ 'Ability to progress tasks'),
+            self::PERM_DONE    => array(
+                'title' =>
+                /* @trans */ 'Done',
+                'desc'  =>
+                /* @trans */ 'Ability to done tasks'),
             );
 
-    const ISOPEN    = 0x0001;
-    const ISOVERDUE = 0x0002;
+    const ISOPEN     = 0x0001;
+    const ISOVERDUE  = 0x0002;
+    const ISCLOSE = 0x0000;
+    const ISPROGRESS = 0x0003;
+    const ISDONE     = 0x0004;
 
 
     protected function hasFlag($flag) {
@@ -125,6 +140,15 @@ class TaskModel extends VerySimpleModel {
     }
 
     protected function setFlag($flag) {
+        switch ($flag) {
+            case self::ISPROGRESS:
+            case self::ISDONE:
+            case self::ISCLOSE:
+            case self::ISOPEN:
+                return $this->set('flags', $flag);
+            default:
+                break;
+        }
         return $this->set('flags', $this->get('flags') | $flag);
     }
 
@@ -180,6 +204,54 @@ class TaskModel extends VerySimpleModel {
         return !$this->isOpen();
     }
 
+    function isProgress() {
+        return self::ISPROGRESS === $this->get('flags');
+    }
+
+    function canProgress() {
+        return self::ISOPEN === $this->get('flags');
+    }
+
+    function isDone() {
+        return self::ISDONE === $this->get('flags');
+    }
+
+    function canDone() {
+        return self::ISPROGRESS === $this->get('flags');
+    }
+
+    function isProgressable() {
+
+        if ($this->isProgress())
+            return true;
+
+        $warning = null;
+        if ($this->getMissingRequiredFields()) {
+            $warning = sprintf(
+                    __( '%1$s is missing data on %2$s one or more required fields %3$s and cannot be progress'),
+                    __('This task'),
+                    '', '');
+        }
+
+        return $warning ?: true;
+    }
+
+    function isDoneable() {
+
+        if ($this->isDone())
+            return true;
+
+        $warning = null;
+        if ($this->getMissingRequiredFields()) {
+            $warning = sprintf(
+                    __( '%1$s is missing data on %2$s one or more required fields %3$s and cannot be done'),
+                    __('This task'),
+                    '', '');
+        }
+
+        return $warning ?: true;
+    }
+
     function isCloseable() {
 
         if ($this->isClosed())
@@ -197,11 +269,19 @@ class TaskModel extends VerySimpleModel {
     }
 
     protected function close() {
-        return $this->clearFlag(self::ISOPEN);
+        return $this->setFlag(self::ISCLOSE);
     }
 
     protected function reopen() {
         return $this->setFlag(self::ISOPEN);
+    }
+
+    protected function progress() {
+        return $this->setFlag(self::ISPROGRESS);
+    }
+
+    protected function done() {
+        return $this->setFlag(self::ISDONE);
     }
 
     function isAssigned($to=null) {
@@ -269,6 +349,14 @@ class Task extends TaskModel implements RestrictedAccess, Threadable {
     }
 
     function getStatus() {
+        switch ($this->get('flags')) {
+            case self::ISPROGRESS:
+                return __('Progress');
+            case self::ISDONE:
+                return __('Done');
+            default:
+                break;
+        }
         return $this->isOpen() ? __('Open') : __('Completed');
     }
 
@@ -622,6 +710,43 @@ class Task extends TaskModel implements RestrictedAccess, Threadable {
                 }
             };
             break;
+        case 'progress':
+            if ($this->isProgress())
+                return false;
+
+            $this->progress();
+            $ecb = function($t) use($thisstaff) {
+                $t->logEvent('progressed');
+
+                if ($t->ticket) {
+                    $vars = array(
+                            'title' => sprintf('Task %s Progressed',
+                                $t->getNumber()),
+                            'note' => __('Task progressed')
+                            );
+                    $t->ticket->logNote($vars['title'], $vars['note'], $thisstaff);
+                }
+            };
+            break;
+        case 'done':
+            if ($this->isDone())
+                return false;
+
+            $this->done();
+            $ecb = function($t) use($thisstaff) {
+                $t->logEvent('doneed');
+
+                if ($t->ticket) {
+                    $vars = array(
+                            'title' => sprintf('Task %s Doneed',
+                                $t->getNumber()),
+                            'note' => __('Task doneed')
+                            );
+                    $t->ticket->logNote($vars['title'], $vars['note'], $thisstaff);
+                }
+            };
+            break;
+
         default:
             return false;
         }
@@ -1659,6 +1784,8 @@ class Task extends TaskModel implements RestrictedAccess, Threadable {
         $sql =  'SELECT \'open\', count(task.id ) AS tasks '
                 .'FROM ' . TASK_TABLE . ' task '
                 . sprintf(' WHERE task.flags & %d != 0 ', TaskModel::ISOPEN)
+                . sprintf(' AND task.flags != %d ', TaskModel::ISPROGRESS)
+                . sprintf(' AND task.flags != %d ', TaskModel::ISDONE)
                 . $where . $where2
 
                 .'UNION SELECT \'overdue\', count( task.id ) AS tasks '
@@ -1676,6 +1803,18 @@ class Task extends TaskModel implements RestrictedAccess, Threadable {
                 .'UNION SELECT \'closed\', count( task.id ) AS tasks '
                 .'FROM ' . TASK_TABLE . ' task '
                 . sprintf(' WHERE task.flags & %d = 0 ', TaskModel::ISOPEN)
+                . sprintf(' AND task.flags != %d ', TaskModel::ISPROGRESS)
+                . sprintf(' AND task.flags != %d ', TaskModel::ISDONE)
+                . $where
+
+                .'UNION SELECT \'progress\', count( task.id ) AS tasks '
+                .'FROM ' . TASK_TABLE . ' task '
+                . sprintf(' WHERE task.flags = %d ', TaskModel::ISPROGRESS)
+                . $where
+
+                .'UNION SELECT \'done\', count( task.id ) AS tasks '
+                .'FROM ' . TASK_TABLE . ' task '
+                . sprintf(' WHERE task.flags = %d ', TaskModel::ISDONE)
                 . $where;
 
         $res = db_query($sql);

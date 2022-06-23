@@ -2070,6 +2070,8 @@ class ThreadEvent extends VerySimpleModel {
             'merged'      => 'code-fork',
             'linked'      => 'link',
             'unlinked'    => 'unlink',
+            'progressed'  => 'pencil',
+            'doneed'      => 'thumbs-up-alt',
         );
         return @$icons[$this->state] ?: 'chevron-sign-right';
     }
@@ -2531,6 +2533,24 @@ class CreationEvent extends ThreadEvent {
 
     function getDescription($mode=self::MODE_STAFF) {
         return $this->template(__('Created by <b>{somebody}</b> {timestamp}'), $mode);
+    }
+}
+
+class ProgressEvent extends ThreadEvent {
+    static $icon = 'pencil';
+    static $state = 'progressed';
+
+    function getDescription($mode=self::MODE_STAFF) {
+        return $this->template(__('Progressed by <b>{somebody}</b> {timestamp}'), $mode);
+    }
+}
+
+class DoneEvent extends ThreadEvent {
+    static $icon = 'thumbs-up-alt';
+    static $state = 'doneed';
+
+    function getDescription($mode=self::MODE_STAFF) {
+        return $this->template(__('Doneed by <b>{somebody}</b> {timestamp}'), $mode);
     }
 }
 
