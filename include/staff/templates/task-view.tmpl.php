@@ -220,7 +220,7 @@ if ($task->isOverdue())
                             <a class="no-pjax task-action"
                                 href="#tasks/<?php echo $task->getId(); ?>/reopen"><i
                                 class="icon-fixed-width icon-undo"></i> <?php
-                                echo __('Reopen 1');?> </a>
+                                echo __('Reopen');?> </a>
                         </li>
                         <?php
                         } elseif ($canClose) {
