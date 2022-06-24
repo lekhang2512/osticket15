@@ -351,9 +351,9 @@ class Task extends TaskModel implements RestrictedAccess, Threadable {
     function getStatus() {
         switch ($this->get('flags')) {
             case self::ISPROGRESS:
-                return __('Progress');
+                return __('Progressed');
             case self::ISDONE:
-                return __('Done');
+                return __('Doneed');
             default:
                 break;
         }
@@ -1830,6 +1830,18 @@ class Task extends TaskModel implements RestrictedAccess, Threadable {
             return;
 
         require STAFFINC_DIR.'templates/tasks-actions.tmpl.php';
+    }
+
+    public function getAssignFromName() {
+        $thread = $this->getThread();
+        $events = $thread->getEvents();
+        $name = null;
+        foreach ($events as $event) {
+            if ($event->getTypedEvent()->state === 'assigned') {
+                $name = $event->getUserName()->getOriginal();
+            }
+        }
+        return $name;
     }
 }
 

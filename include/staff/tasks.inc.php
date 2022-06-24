@@ -58,6 +58,14 @@ $queue_columns = array(
             'width' => '16%',
             'heading' => __('Agent'),
             ),
+        'assignee_from' => array(
+            'width' => '16%',
+            'heading' => __('Assign From'),
+            ),
+        'status' => array(
+            'width' => '16%',
+            'heading' => __('Status'),
+            ),
         );
 
 
@@ -425,6 +433,9 @@ if ($thisstaff->hasPerm(Task::PERM_DELETE, false)) {
                 $number = sprintf('<b>%s</b>', $number);
 
             $title = Format::truncate($title_field->display($title_field->to_php($T['cdata__title'])), 40);
+            $task = (new Task($T));
+            $assignFromName = $task->getAssignFromName();
+            $status = $task->getStatus();
             ?>
             <tr id="<?php echo $T['id']; ?>">
                 <?php
@@ -465,6 +476,8 @@ if ($thisstaff->hasPerm(Task::PERM_DELETE, false)) {
                 </td>
                 <td nowrap>&nbsp;<?php echo Format::truncate($dept, 40); ?></td>
                 <td nowrap>&nbsp;<?php echo $assignee; ?></td>
+                <td nowrap>&nbsp;<?php echo $assignFromName; ?></td>
+                <td nowrap>&nbsp;<?php echo $status; ?></td>
             </tr>
             <?php
             } //end of foreach
