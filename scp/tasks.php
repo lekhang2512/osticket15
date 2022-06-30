@@ -193,6 +193,22 @@ if ($stats['closed']) {
                         ($_REQUEST['status']=='closed'));
 }
 
+if ($stats['progress']) {
+    $nav->addSubMenu(array('desc' => __('Progress').' ('.number_format($stats['progress']).')',
+                           'title'=>__('Progress Tasks'),
+                           'href'=>'tasks.php?status=progress',
+                           'iconclass'=>'progressTickets'),
+                        ($_REQUEST['status']=='progress'));
+}
+
+if ($stats['done']) {
+    $nav->addSubMenu(array('desc' => __('Done').' ('.number_format($stats['done']).')',
+                           'title'=>__('Done Tasks'),
+                           'href'=>'tasks.php?status=done',
+                           'iconclass'=>'doneTickets'),
+                        ($_REQUEST['status']=='done'));
+}
+
 if ($thisstaff->hasPerm(TaskModel::PERM_CREATE, false)) {
     $nav->addSubMenu(array('desc'=>__('New Task'),
                            'title'=> __('Open a New Task'),

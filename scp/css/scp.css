@@ -944,6 +944,8 @@ a.assignedTickets { background:url(../images/icons/assigned_tickets.gif) }
 a.overdueTickets { background:url(../images/icons/overdue_tickets.gif) }
 a.answeredTickets { background:url(../images/icons/answered_tickets.gif) }
 a.closedTickets { background:url(../images/icons/closed_tickets.gif) }
+a.progressTickets { background:url(../images/icons/open_tickets.gif) }
+a.doneTickets { background:url(../images/icons/closed_tickets.gif) }
 a.newTicket { background:url(../images/icons/new_ticket.gif) }
 
 a.premade { background:url(../images/icons/premade_reply.gif) }

@@ -233,6 +233,28 @@ if ($task->isOverdue())
                         </li>
                         <?php
                         } ?>
+                        <?php
+                        if ($task->canProgress()) {
+                        ?>
+                        <li>
+                            <a class="no-pjax task-action"
+                                href="#tasks/<?php echo $task->getId(); ?>/progress"><i
+                                class="icon-fixed-width icon-ok-circle"></i> <?php
+                                echo __('Progress');?> </a>
+                        </li>
+                        <?php
+                        } ?>
+                        <?php
+                        if ($task->canDone()) {
+                        ?>
+                        <li>
+                            <a class="no-pjax task-action"
+                                href="#tasks/<?php echo $task->getId(); ?>/done"><i
+                                class="icon-fixed-width icon-ok-circle"></i> <?php
+                                echo __('Done');?> </a>
+                        </li>
+                        <?php
+                        } ?>
                     </ul>
                 </div>
                 <?php
@@ -637,6 +659,24 @@ else
                                 echo $task->isClosed() ?
                                 'selected="selected"': ''; ?>> <?php
                                 echo __('Closed'); ?></option>
+                            <?php
+                            } ?>
+                            <?php
+                            if ($task->isProgress() || $task->canProgress()) {
+                                ?>
+                            <option value="progress" <?php
+                                echo $task->isProgress() ?
+                                'selected="selected"': ''; ?>> <?php
+                                echo __('Progress'); ?></option>
+                            <?php
+                            } ?>
+                            <?php
+                            if ($task->isDone() || $task->canDone()) {
+                                ?>
+                            <option value="done" <?php
+                                echo $task->isDone() ?
+                                'selected="selected"': ''; ?>> <?php
+                                echo __('Done'); ?></option>
                             <?php
                             } ?>
                         </select>
